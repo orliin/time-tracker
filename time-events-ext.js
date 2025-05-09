@@ -1,141 +1,141 @@
-const TIME_IN_HOURS = !1,
-    ONE_MIN = 6e4,
-    FIFTEEN_MINS = 15 * ONE_MIN,
-    THIRTY_MINS = 30 * ONE_MIN,
-    FOURTYFIVE_MINS = 45 * ONE_MIN,
-    ONE_HOUR = 60 * ONE_MIN,
-    SIX_HOURS = 6 * ONE_HOUR,
-    NINE_HOURS = 9 * ONE_HOUR,
-    TEN_HOURS = 10 * ONE_HOUR,
-    TAB_QUICK_ENTRY = "quickEntry",
-    TAB_EVENT_LIST = "eventList",
-    TAB_CREATE_EVENT = "createEvent",
-    DEFAULT_WORK_HOURS = 8,
-    INDIVIDUAL_WORK_HOURS = (window.MY_WORK_HOURS || DEFAULT_WORK_HOURS) * ONE_HOUR,
-    TIME_EVENT_TYPE_CLOCK_IN = "P10",
-    TIME_EVENT_TYPE_BEGIN_BREAK = "P15",
-    TIME_EVENT_TYPE_END_BREAK = "P25",
-    TIME_EVENT_TYPE_CLOCK_OUT = "P20";
+const TIME_IN_HOURS = !1;
+const ONE_MIN = 6e4;
+const FIFTEEN_MINS = 15 * ONE_MIN;
+const THIRTY_MINS = 30 * ONE_MIN;
+const FOURTYFIVE_MINS = 45 * ONE_MIN;
+const ONE_HOUR = 60 * ONE_MIN;
+const SIX_HOURS = 6 * ONE_HOUR;
+const NINE_HOURS = 9 * ONE_HOUR;
+const TEN_HOURS = 10 * ONE_HOUR;
+const TAB_QUICK_ENTRY = "quickEntry";
+const TAB_EVENT_LIST = "eventList";
+const TAB_CREATE_EVENT = "createEvent";
+const DEFAULT_WORK_HOURS = 8;
+const INDIVIDUAL_WORK_HOURS = (window.MY_WORK_HOURS || DEFAULT_WORK_HOURS) * ONE_HOUR;
+const TIME_EVENT_TYPE_CLOCK_IN = "P10";
+const TIME_EVENT_TYPE_BEGIN_BREAK = "P15";
+const TIME_EVENT_TYPE_END_BREAK = "P25";
+const TIME_EVENT_TYPE_CLOCK_OUT = "P20";
 let userSettings = JSON.parse(localStorage.getItem("userSettings")) || {
-        defaultTimes: {
-            begin: "08:00:00",
-            pauseBegin: "12:00:00",
-            pauseEnd: "12:30:00",
-            end: "17:00:00",
-            autoSubmit: !1
-        },
-        workHoursPerDay: 8
+    defaultTimes: {
+        begin: "08:00:00",
+        pauseBegin: "12:00:00",
+        pauseEnd: "12:30:00",
+        end: "17:00:00",
+        autoSubmit: !1
     },
-    messagesExtracted = !1,
-    buttonsAdded = !1,
-    buttonContainer, configContainer, currentLanguage = "de",
-    languageDetected = !1;
+    workHoursPerDay: 8
+};
+let messagesExtracted = !1;
+let buttonsAdded = !1;
+let buttonContainer, configContainer, currentLanguage = "de";
+let languageDetected = !1;
 const translations = {
-        de: {
-            Kommen: "Kommen",
-            Gehen: "Gehen",
-            "Beginn Pause": "Beginn Pause",
-            "Ende Pause": "Ende Pause",
-            "Kommen Time:": "Kommen Zeit:",
-            "Pause Beginn Time:": "Pause Beginn Zeit:",
-            "Pause End Time:": "Pause Ende Zeit:",
-            "Gehen Time:": "Gehen Zeit:",
-            Save: "Speichern",
-            "Auto Submit": "Automatisch Senden"
-        },
-        en: {
-            Kommen: "Clock-in",
-            Gehen: "Clock-out",
-            "Beginn Pause": "Start of break",
-            "Ende Pause": "End of break",
-            "Kommen Time:": "Clock-in Time:",
-            "Pause Beginn Time:": "Break Start Time:",
-            "Pause End Time:": "Break End Time:",
-            "Gehen Time:": "Clock-out Time:",
-            Save: "Save",
-            "Auto Submit": "Auto Submit"
+    de: {
+        Kommen: "Kommen",
+        Gehen: "Gehen",
+        "Beginn Pause": "Beginn Pause",
+        "Ende Pause": "Ende Pause",
+        "Kommen Time:": "Kommen Zeit:",
+        "Pause Beginn Time:": "Pause Beginn Zeit:",
+        "Pause End Time:": "Pause Ende Zeit:",
+        "Gehen Time:": "Gehen Zeit:",
+        Save: "Speichern",
+        "Auto Submit": "Automatisch Senden"
+    },
+    en: {
+        Kommen: "Clock-in",
+        Gehen: "Clock-out",
+        "Beginn Pause": "Start of break",
+        "Ende Pause": "End of break",
+        "Kommen Time:": "Clock-in Time:",
+        "Pause Beginn Time:": "Break Start Time:",
+        "Pause End Time:": "Break End Time:",
+        "Gehen Time:": "Clock-out Time:",
+        Save: "Save",
+        "Auto Submit": "Auto Submit"
+    }
+};
+const translate = e => translations[currentLanguage][e] || e;
+const milliSecondsToday = () => {
+    var e = new Date,
+        t = new Date(e.getFullYear(), e.getMonth(), e.getDate());
+    return e.getTime() - t.getTime()
+};
+const timeWithoutSeconds = e => Math.floor(e / ONE_MIN) * ONE_MIN;
+const formatTime = (e, t) => (t = t || !1) ? (e / ONE_HOUR).toFixed(2) + "h" : new Date(e).toISOString().slice(11, 16);
+const saveDefaultTimeSettings = (e, t, n, i, a) => {
+    userSettings.defaultTimes = {
+        begin: e,
+        pauseBegin: t,
+        pauseEnd: n,
+        end: i,
+        autoSubmit: a
+    }, localStorage.setItem("userSettings", JSON.stringify(userSettings)), updateButtonLabels()
+};
+const updateButtonLabels = () => {
+    if (buttonContainer) {
+        var t = buttonContainer.querySelectorAll(".time-event-button"),
+            n = [userSettings.defaultTimes.begin, userSettings.defaultTimes.pauseBegin, userSettings.defaultTimes.pauseEnd, userSettings.defaultTimes.end],
+            i = [translate("Kommen"), translate("Beginn Pause"), translate("Ende Pause"), translate("Gehen")];
+        for (let e = 0; e < t.length; e++) t[e].textContent = `${i[e]} (${n[e].slice(0, 5)})`
+    }
+};
+const addConfigInputs = e => {
+    (configContainer = document.createElement("div")).classList.add("config-container");
+    var t = (e, t, n) => {
+        var i = document.createElement("div"),
+            a = (i.classList.add("config-input-container"), document.createElement("label")),
+            e = (a.textContent = translate(e), a.setAttribute("for", n), i.appendChild(a), document.createElement("input"));
+        return e.type = "time", e.id = n, e.value = t.slice(0, 5), i.appendChild(e), i
+    },
+        n = t("Kommen Time:", userSettings.defaultTimes.begin, "kommenTime"),
+        i = t("Pause Beginn Time:", userSettings.defaultTimes.pauseBegin, "pauseBeginnTime"),
+        a = t("Pause Ende Time:", userSettings.defaultTimes.pauseEnd, "pauseEndTime"),
+        t = t("Gehen Time:", userSettings.defaultTimes.end, "gehenTime"),
+        n = (configContainer.appendChild(n), configContainer.appendChild(i), configContainer.appendChild(a), configContainer.appendChild(t), document.createElement("div")),
+        i = (n.classList.add("config-checkbox-container"), document.createElement("input")),
+        a = (i.type = "checkbox", i.id = "autoSubmit", i.checked = userSettings.defaultTimes.autoSubmit, n.appendChild(i), document.createElement("label")),
+        t = (a.textContent = translate("Auto Submit"), a.setAttribute("for", "autoSubmit"), n.appendChild(a), configContainer.appendChild(n), document.createElement("button"));
+    t.textContent = translate("Save"), t.classList.add("config-button"), t.addEventListener("click", () => {
+        const e = document.querySelector(".config-button");
+        e.disabled = !0, e.classList.add("saving");
+        var t = document.getElementById("kommenTime").value + ":00",
+            n = document.getElementById("pauseBeginnTime").value + ":00",
+            i = document.getElementById("pauseEndTime").value + ":00",
+            a = document.getElementById("gehenTime").value + ":00",
+            o = document.getElementById("autoSubmit").checked;
+        saveDefaultTimeSettings(t, n, i, a, o), setTimeout(() => {
+            e.disabled = !1, e.textContent = translate("Save"), e.classList.remove("saving")
+        }, 1e3)
+    }), configContainer.appendChild(t), e.parentNode.insertBefore(configContainer, e.nextSibling)
+};
+const addButtons = () => {
+    var e = document.getElementById("__title2");
+    if (e && !document.querySelector(".button-container")) {
+        (buttonContainer = document.createElement("div")).classList.add("button-container"), addConfigInputs(e);
+        const i = [translate("Kommen"), translate("Beginn Pause"), translate("Ende Pause"), translate("Gehen")];
+        var t = [userSettings.defaultTimes.begin, userSettings.defaultTimes.pauseBegin, userSettings.defaultTimes.pauseEnd, userSettings.defaultTimes.end];
+        for (let e = 0; e < i.length; e++) {
+            var n = document.createElement("button");
+            n.textContent = `${i[e]} (${t[e].slice(0, 5)})`, n.classList.add("time-event-button"), n.addEventListener("click", () => {
+                handleButtonClick(i[e])
+            }), buttonContainer.appendChild(n)
         }
-    },
-    translate = e => translations[currentLanguage][e] || e,
-    milliSecondsToday = () => {
-        var e = new Date,
-            t = new Date(e.getFullYear(), e.getMonth(), e.getDate());
-        return e.getTime() - t.getTime()
-    },
-    timeWithoutSeconds = e => Math.floor(e / ONE_MIN) * ONE_MIN,
-    formatTime = (e, t) => (t = t || !1) ? (e / ONE_HOUR).toFixed(2) + "h" : new Date(e).toISOString().slice(11, 16),
-    saveDefaultTimeSettings = (e, t, n, i, a) => {
-        userSettings.defaultTimes = {
-            begin: e,
-            pauseBegin: t,
-            pauseEnd: n,
-            end: i,
-            autoSubmit: a
-        }, localStorage.setItem("userSettings", JSON.stringify(userSettings)), updateButtonLabels()
-    },
-    updateButtonLabels = () => {
-        if (buttonContainer) {
-            var t = buttonContainer.querySelectorAll(".time-event-button"),
-                n = [userSettings.defaultTimes.begin, userSettings.defaultTimes.pauseBegin, userSettings.defaultTimes.pauseEnd, userSettings.defaultTimes.end],
-                i = [translate("Kommen"), translate("Beginn Pause"), translate("Ende Pause"), translate("Gehen")];
-            for (let e = 0; e < t.length; e++) t[e].textContent = `${i[e]} (${n[e].slice(0,5)})`
-        }
-    },
-    addConfigInputs = e => {
-        (configContainer = document.createElement("div")).classList.add("config-container");
-        var t = (e, t, n) => {
-                var i = document.createElement("div"),
-                    a = (i.classList.add("config-input-container"), document.createElement("label")),
-                    e = (a.textContent = translate(e), a.setAttribute("for", n), i.appendChild(a), document.createElement("input"));
-                return e.type = "time", e.id = n, e.value = t.slice(0, 5), i.appendChild(e), i
-            },
-            n = t("Kommen Time:", userSettings.defaultTimes.begin, "kommenTime"),
-            i = t("Pause Beginn Time:", userSettings.defaultTimes.pauseBegin, "pauseBeginnTime"),
-            a = t("Pause Ende Time:", userSettings.defaultTimes.pauseEnd, "pauseEndTime"),
-            t = t("Gehen Time:", userSettings.defaultTimes.end, "gehenTime"),
-            n = (configContainer.appendChild(n), configContainer.appendChild(i), configContainer.appendChild(a), configContainer.appendChild(t), document.createElement("div")),
-            i = (n.classList.add("config-checkbox-container"), document.createElement("input")),
-            a = (i.type = "checkbox", i.id = "autoSubmit", i.checked = userSettings.defaultTimes.autoSubmit, n.appendChild(i), document.createElement("label")),
-            t = (a.textContent = translate("Auto Submit"), a.setAttribute("for", "autoSubmit"), n.appendChild(a), configContainer.appendChild(n), document.createElement("button"));
-        t.textContent = translate("Save"), t.classList.add("config-button"), t.addEventListener("click", () => {
-            const e = document.querySelector(".config-button");
-            e.disabled = !0, e.classList.add("saving");
-            var t = document.getElementById("kommenTime").value + ":00",
-                n = document.getElementById("pauseBeginnTime").value + ":00",
-                i = document.getElementById("pauseEndTime").value + ":00",
-                a = document.getElementById("gehenTime").value + ":00",
-                o = document.getElementById("autoSubmit").checked;
-            saveDefaultTimeSettings(t, n, i, a, o), setTimeout(() => {
-                e.disabled = !1, e.textContent = translate("Save"), e.classList.remove("saving")
-            }, 1e3)
-        }), configContainer.appendChild(t), e.parentNode.insertBefore(configContainer, e.nextSibling)
-    },
-    addButtons = () => {
-        var e = document.getElementById("__title2");
-        if (e && !document.querySelector(".button-container")) {
-            (buttonContainer = document.createElement("div")).classList.add("button-container"), addConfigInputs(e);
-            const i = [translate("Kommen"), translate("Beginn Pause"), translate("Ende Pause"), translate("Gehen")];
-            var t = [userSettings.defaultTimes.begin, userSettings.defaultTimes.pauseBegin, userSettings.defaultTimes.pauseEnd, userSettings.defaultTimes.end];
-            for (let e = 0; e < i.length; e++) {
-                var n = document.createElement("button");
-                n.textContent = `${i[e]} (${t[e].slice(0,5)})`, n.classList.add("time-event-button"), n.addEventListener("click", () => {
-                    handleButtonClick(i[e])
-                }), buttonContainer.appendChild(n)
-            }
-            e.parentNode.insertBefore(buttonContainer, configContainer.nextSibling), buttonsAdded = !0
-        } else e || console.warn("Title bar not found. Buttons not added.")
-    },
-    handleButtonClick = t => {
-        var e = document.getElementById("__xmlview0--idTimeEventType-inner");
-        const o = document.getElementById("__xmlview0--timePicker-inner");
-        if (e)
-            if (e.value = t, e.dispatchEvent(new Event("input", {
-                    bubbles: !0
-                })), e.dispatchEvent(new Event("change", {
-                    bubbles: !0
-                })), e.blur(), o) {
-                let e = "";
-                switch (t) {
+        e.parentNode.insertBefore(buttonContainer, configContainer.nextSibling), buttonsAdded = !0
+    } else e || console.warn("Title bar not found. Buttons not added.")
+};
+const handleButtonClick = t => {
+    var e = document.getElementById("__xmlview0--idTimeEventType-inner");
+    const o = document.getElementById("__xmlview0--timePicker-inner");
+    if (e)
+        if (e.value = t, e.dispatchEvent(new Event("input", {
+            bubbles: !0
+        })), e.dispatchEvent(new Event("change", {
+            bubbles: !0
+        })), e.blur(), o) {
+            let e = "";
+            switch (t) {
                 case translate("Kommen"):
                     e = userSettings.defaultTimes.begin;
                     break;
@@ -147,36 +147,36 @@ const translations = {
                     break;
                 case translate("Gehen"):
                     e = userSettings.defaultTimes.end
-                }
-                e && (o.value = e, o.dispatchEvent(new Event("input", {
+            }
+            e && (o.value = e, o.dispatchEvent(new Event("input", {
+                bubbles: !0
+            })), o.dispatchEvent(new Event("change", {
+                bubbles: !0
+            })), o.blur(), o.dispatchEvent(new FocusEvent("blur")), setTimeout(() => {
+                const e = o.value;
+                var [t, n, i] = e.split(":");
+                let a = parseInt(i, 10);
+                59 === a ? a = 0 : a += 1;
+                i = t + `:${n}:` + String(a).padStart(2, "0");
+                o.value = i, o.dispatchEvent(new Event("input", {
                     bubbles: !0
                 })), o.dispatchEvent(new Event("change", {
                     bubbles: !0
                 })), o.blur(), o.dispatchEvent(new FocusEvent("blur")), setTimeout(() => {
-                    const e = o.value;
-                    var [t, n, i] = e.split(":");
-                    let a = parseInt(i, 10);
-                    59 === a ? a = 0 : a += 1;
-                    i = t + `:${n}:` + String(a).padStart(2, "0");
-                    o.value = i, o.dispatchEvent(new Event("input", {
+                    o.value = e, o.dispatchEvent(new Event("input", {
                         bubbles: !0
                     })), o.dispatchEvent(new Event("change", {
                         bubbles: !0
-                    })), o.blur(), o.dispatchEvent(new FocusEvent("blur")), setTimeout(() => {
-                        o.value = e, o.dispatchEvent(new Event("input", {
-                            bubbles: !0
-                        })), o.dispatchEvent(new Event("change", {
-                            bubbles: !0
-                        })), o.blur(), o.dispatchEvent(new FocusEvent("blur"))
-                    }, 100)
-                }, 100), userSettings.defaultTimes.autoSubmit) && setTimeout(triggerSaveButton, 200)
-            } else console.warn("Time picker input field not found.");
-        else console.warn("Time event type input field not found.")
-    },
-    triggerSaveButton = () => {
-        let e = sap.ui.getCore().byId("__xmlview0--save");
-        e || (console.warn("Save button not found immediately. Trying to find it using querySelector."), e = document.querySelector(".sapMDialog .sapMBar .sapMDialogBeginButton")), e ? e.firePress ? (e.firePress(), console.log("Save button clicked using firePress.")) : (console.warn("saveButton.firePress is not a function.  Trying click()."), e.click(), console.log("Save button clicked using click().")) : console.error("Save button not found.")
-    },
+                    })), o.blur(), o.dispatchEvent(new FocusEvent("blur"))
+                }, 100)
+            }, 100), userSettings.defaultTimes.autoSubmit) && setTimeout(triggerSaveButton, 200)
+        } else console.warn("Time picker input field not found.");
+    else console.warn("Time event type input field not found.")
+};
+const triggerSaveButton = () => {
+    let e = sap.ui.getCore().byId("__xmlview0--save");
+    e || (console.warn("Save button not found immediately. Trying to find it using querySelector."), e = document.querySelector(".sapMDialog .sapMBar .sapMDialogBeginButton")), e ? e.firePress ? (e.firePress(), console.log("Save button clicked using firePress.")) : (console.warn("saveButton.firePress is not a function.  Trying click()."), e.click(), console.log("Save button clicked using click().")) : console.error("Save button not found.")
+},
     style = document.createElement("style"),
     detectLanguage = (style.innerHTML = `
 .sapMIBar.sapMTB .sapMBarChild:last-child:only-child {
@@ -269,24 +269,25 @@ const translations = {
     }
 }
 `, document.head.appendChild(style), () => {
-        currentLanguage = document.documentElement.lang, languageDetected = !0, updateButtonLabels()
-    });
+            currentLanguage = document.documentElement.lang, languageDetected = !0, updateButtonLabels()
+        });
 let nextEventTypeSet = !1;
+
 setInterval(() => {
-    var n = sap.ui.getCore().byId("__xmlview0--idEventsTable"),
-        i = sap.ui.getCore().byId("__xmlview0--idIconTabBarNoIcons").getSelectedKey();
+    var n = sap.ui.getCore().byId("__xmlview0--idEventsTable");
+    var i = sap.ui.getCore().byId("__xmlview0--idIconTabBarNoIcons").getSelectedKey();
     if (languageDetected || detectLanguage(), n) {
         var d = n.getItems().map(e => e.getBindingContext("timeEventList").getObject());
         let e;
         if (0 < d.length) switch (d[d.length - 1].TimeType) {
-        case TIME_EVENT_TYPE_CLOCK_IN:
-            e = TIME_EVENT_TYPE_BEGIN_BREAK;
-            break;
-        case TIME_EVENT_TYPE_BEGIN_BREAK:
-            e = TIME_EVENT_TYPE_END_BREAK;
-            break;
-        case TIME_EVENT_TYPE_END_BREAK:
-            e = TIME_EVENT_TYPE_CLOCK_OUT
+            case TIME_EVENT_TYPE_CLOCK_IN:
+                e = TIME_EVENT_TYPE_BEGIN_BREAK;
+                break;
+            case TIME_EVENT_TYPE_BEGIN_BREAK:
+                e = TIME_EVENT_TYPE_END_BREAK;
+                break;
+            case TIME_EVENT_TYPE_END_BREAK:
+                e = TIME_EVENT_TYPE_CLOCK_OUT
         } else e = translate("Kommen");
         var u = sap.ui.getCore().byId("__xmlview0--idTimeEventType");
         u && !nextEventTypeSet && (u.setSelectedKey(e), nextEventTypeSet = !0);
@@ -307,23 +308,23 @@ setInterval(() => {
                     ms: milliSecondsToday()
                 }
             });
-            let a = 0,
-                o = 0,
-                s = 0,
-                r = !1,
-                l = 0;
+            let a = 0;
+            let o = 0;
+            let s = 0;
+            let r = !1;
+            let l = 0;
             d.forEach((e, t, n) => {
                 e.TimeType === TIME_EVENT_TYPE_CLOCK_IN && (l = l || timeWithoutSeconds(n[t].EventTime.ms));
                 var i = n[t + 1];
                 i && (n = timeWithoutSeconds(n[t + 1].EventTime.ms) - timeWithoutSeconds(n[t].EventTime.ms), e.TimeType === TIME_EVENT_TYPE_BEGIN_BREAK && i.TimeType === TIME_EVENT_TYPE_END_BREAK || e.TimeType === TIME_EVENT_TYPE_CLOCK_OUT && i.TimeType === TIME_EVENT_TYPE_CLOCK_IN ? (o += n, n >= FIFTEEN_MINS && (s += n)) : e.TimeType === TIME_EVENT_TYPE_CLOCK_IN || e.TimeType === TIME_EVENT_TYPE_END_BREAK ? (n > SIX_HOURS && (r = !0), a += n) : console.log("Time events inconsistent. Please check!"))
             });
-            var u = Math.max(0, a - INDIVIDUAL_WORK_HOURS),
-                d = o,
-                m = (o = o > THIRTY_MINS ? o : THIRTY_MINS, l + o + INDIVIDUAL_WORK_HOURS),
-                E = (t = `Working hours: ${formatTime(a,TIME_IN_HOURS)} | Break time: ${formatTime(d,TIME_IN_HOURS)} | Official break time (>= 15 mins): ${formatTime(s,TIME_IN_HOURS)} | Overtime: ${formatTime(u,TIME_IN_HOURS)} | End: ` + formatTime(m, !1), sap.ui.getCore().byId("__layout0")),
-                c = sap.ui.getCore().byId("__vbox0"),
-                T = E.getContent(),
-                g = c.getItems();
+            var u = Math.max(0, a - INDIVIDUAL_WORK_HOURS);
+            var d = o;
+            var m = (o = o > THIRTY_MINS ? o : THIRTY_MINS, l + o + INDIVIDUAL_WORK_HOURS);
+            var E = (t = `Working hours: ${formatTime(a, TIME_IN_HOURS)} | Break time: ${formatTime(d, TIME_IN_HOURS)} | Official break time (>= 15 mins): ${formatTime(s, TIME_IN_HOURS)} | Overtime: ${formatTime(u, TIME_IN_HOURS)} | End: ` + formatTime(m, !1), sap.ui.getCore().byId("__layout0"));
+            var c = sap.ui.getCore().byId("__vbox0");
+            var T = E.getContent();
+            var g = c.getItems();
             if (2 < T.length)
                 for (let e = 2; e < T.length; e++) E.removeContent(T[e]);
             if (3 < g.length)
