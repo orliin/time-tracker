@@ -273,11 +273,13 @@ const triggerSaveButton = () => {
         });
 let nextEventTypeSet = !1;
 
+console.error("DEBUG", "Time events extension loaded.");
 setInterval(() => {
     var n = sap.ui.getCore().byId("__xmlview0--idEventsTable");
     var i = sap.ui.getCore().byId("__xmlview0--idIconTabBarNoIcons").getSelectedKey();
     if (languageDetected || detectLanguage(), n) {
         var d = n.getItems().map(e => e.getBindingContext("timeEventList").getObject());
+        console.error("DEBUG", "Time events: ", d);
         let e;
         if (0 < d.length) switch (d[d.length - 1].TimeType) {
             case TIME_EVENT_TYPE_CLOCK_IN:
